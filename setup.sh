@@ -6,6 +6,43 @@ echo "🚀 FaceFusion RunPod Setup Starting..."
 chmod +x start_all.sh
 chmod +x stop_all.sh
 
+# Node.js 설치 확인 및 자동 설치
+echo "🔍 Checking Node.js installation..."
+if ! command -v node &> /dev/null || ! command -v npm &> /dev/null; then
+    echo "📦 Node.js not found. Installing Node.js LTS..."
+    
+    # RunPod 환경에서 apt 업데이트 후 Node.js 설치 (sudo 없이)
+    apt-get update -y
+    apt-get install -y curl
+    
+    # Node.js 공식 저장소 추가 및 설치 (RunPod는 이미 root)
+    curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
+    apt-get install -y nodejs
+    
+    # 설치 확인
+    if command -v node &> /dev/null && command -v npm &> /dev/null; then
+        echo "✅ Node.js $(node --version) and npm $(npm --version) installed successfully"
+    else
+        echo "❌ Node.js installation failed. Trying alternative method..."
+        
+        # 대안: nvm 설치 (RunPod 환경에서 더 안정적)
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+        export NVM_DIR="$HOME/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+        nvm install --lts
+        nvm use --lts
+        
+        if command -v node &> /dev/null && command -v npm &> /dev/null; then
+            echo "✅ Node.js $(node --version) installed via nvm"
+        else
+            echo "❌ All Node.js installation methods failed"
+            exit 1
+        fi
+    fi
+else
+    echo "✅ Node.js $(node --version) and npm $(npm --version) already installed"
+fi
+
 # 프론트엔드 의존성 설치
 echo "📦 Installing frontend dependencies..."
 cd frontend
